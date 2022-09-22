@@ -1,14 +1,22 @@
-using Microsoft.AspNetCore.Components;
-using Microsoft.AspNetCore.Components.Web;
 using Microsoft.AspNetCore.HttpOverrides;
-using myapp.Data;
+using MyApp.Proxies;
+using MyApp.Services;
 
 var builder = WebApplication.CreateBuilder(args);
+builder.Host.UseSystemd();
 
 // Add services to the container.
-builder.Services.AddRazorPages();
-builder.Services.AddServerSideBlazor();
-builder.Services.AddSingleton<WeatherForecastService>();
+var configuration = builder.Configuration;
+
+var services = builder.Services;
+services.AddHttpClient<ICounterProxy, CounterProxy>(client => {
+    client.BaseAddress = new Uri(configuration.GetValue<string>("MyApi:BaseUrl"));
+});
+
+services.AddScoped<ICounterService, CounterService>();
+
+services.AddRazorPages();
+services.AddServerSideBlazor();
 
 var app = builder.Build();
 
