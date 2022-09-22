@@ -9,7 +9,8 @@
 
 <p role="status">Current count: @currentCount</p>
 
-<button class="btn btn-primary" @onclick="IncrementCount">Click me</button>
+<button class="btn btn-primary" @onclick="IncrementCounter">Increment</button>
+<button class="btn btn-primary" @onclick="DecrementCounter">Decrement</button>
 
 @code {
     private int currentCount = 0;
@@ -19,7 +20,7 @@
         currentCount = await counterService.GetCount();
     }
 
-    private void IncrementCount()
+    private void IncrementCounter()
     {
         counterService.IncrementCounter();
         currentCount ++;
