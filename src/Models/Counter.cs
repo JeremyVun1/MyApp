@@ -1,6 +1,8 @@
 namespace MyApp.Models;
 
-public class ChangeCountRequest
+public class Counter
 {
+    public int Id { get; set; }
+
     public int Value { get; set; }
 }

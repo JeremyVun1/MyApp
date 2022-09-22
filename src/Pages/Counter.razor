@@ -1,34 +1,76 @@
 ﻿@page "/counter"
 
 @using MyApp.Services;
+@using Models = MyApp.Models;
 @inject ICounterService counterService;
 
 <PageTitle>Counter</PageTitle>
 
 <h1>Counter</h1>
 
-<p role="status">Current count: @currentCount</p>
+@foreach (var counter in _counters)
+{
+    <div class="card">
+        <div class="card-header">
+            Counter @counter.Key
+        </div>
+        <div class="card-body">
+            <p class="card-text">Current Count: @counter.Value.Value</p>
+            <button class="btn btn-primary" @onclick="@(_ => IncrementCounter(counter.Key))">Increment</button>
+            <button class="btn btn-primary" @onclick="@(_ => DecrementCounter(counter.Key))">Decrement</button>
+            <button class="btn btn-primary" @onclick="@(_ => DeleteCounter(counter.Key))">Delete</button>
+        </div>
+    </div>
+}
 
-<button class="btn btn-primary" @onclick="IncrementCounter">Increment</button>
-<button class="btn btn-primary" @onclick="DecrementCounter">Decrement</button>
+<button class="btn btn-primary" @onclick="CreateCounter">New Counter</button>
 
 @code {
-    private int currentCount = 0;
+    private Dictionary<int, Models.Counter> _counters = new();
 
     protected override async Task OnInitializedAsync()
     {
-        currentCount = await counterService.GetCount();
+        await RefreshCounters();
+    }
+    
+    private async Task RefreshCounters()
+    {
+        var response = await counterService.GetCounters();
+        if (response != null)
+        {
+            _counters = response.ToDictionary(x => x.Id, x => x);
+        }
+        else
+        {
+            _counters = new ();
+        }
     }
 
-    private void IncrementCounter()
+    private async Task IncrementCounter(int counterId)
     {
-        counterService.IncrementCounter();
-        currentCount ++;
+        await counterService.IncrementCounter(counterId);
+        _counters[counterId].Value ++;
     }
 
-    private void DecrementCounter()
+    private async Task DecrementCounter(int counterId)
     {
-        counterService.DecrementCounter();
-        currentCount --;
+        await counterService.DecrementCounter(counterId);
+        _counters[counterId].Value --;
+    }
+
+    private async Task DeleteCounter(int counterId)
+    {
+        if (await counterService.DeleteCounter(counterId))
+        {
+            _counters.Remove(counterId);
+        }
+    }
+
+    private async Task CreateCounter()
+    {
+        if (await counterService.CreateCounter())
+        {
+            await RefreshCounters();
+        }
     }
 }

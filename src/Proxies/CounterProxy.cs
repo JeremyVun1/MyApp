@@ -4,8 +4,13 @@ namespace MyApp.Proxies;
 
 public interface ICounterProxy
 {
-    public Task<int> GetCount();
-    public Task ChangeCounter(int change);
+    Task<List<Counter>> GetCounters();
+    Task<Counter> GetCounter(int counterId);
+
+    Task ChangeCounter(int counterId, int value);
+
+    Task CreateCounter();
+    Task DeleteCounter(int counterId);
 }
 
 public class CounterProxy : ICounterProxy
@@ -17,18 +22,47 @@ public class CounterProxy : ICounterProxy
         _client = client;
     }
 
-    public async Task<int> GetCount()
+    public async Task<List<Counter>> GetCounters()
     {
-        var response = await _client.GetStringAsync("counter");
-        return int.Parse(response);
+        var route = $"counters";
+        var response = await _client.GetAsync(route);
+        response.EnsureSuccessStatusCode();
+
+        return await response.Content.ReadFromJsonAsync<List<Counter>>();
     }
 
-    public async Task ChangeCounter(int change)
+    public async Task<Counter> GetCounter(int counterId = 1)
     {
-        var request = new ChangeCountRequest
-        {
-            Value = change
-        };
-        await _client.PostAsJsonAsync("counter", request);
+        var route = $"counters/{counterId}";
+        var response = await _client.GetAsync(route);
+        response.EnsureSuccessStatusCode();
+
+        return await response.Content.ReadFromJsonAsync<Counter>();
+    }
+
+    public async Task ChangeCounter(int counterId, int value)
+    {
+        var route = $"counters/{counterId}";
+
+        var response = await _client.PostAsJsonAsync(route, new {
+            Value = value
+        });
+        response.EnsureSuccessStatusCode();
+    }
+
+    public async Task CreateCounter()
+    {
+        var route = "counters/new";
+
+        var response = await _client.PostAsync(route, null);
+        response.EnsureSuccessStatusCode();
+    }
+
+    public async Task DeleteCounter(int counterId)
+    {
+        var route = $"counters/{counterId}";
+
+        var response = await _client.DeleteAsync(route);
+        response.EnsureSuccessStatusCode();
     }
 }
